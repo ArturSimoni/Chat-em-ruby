@@ -1,22 +1,31 @@
 require 'socket'
+require 'thread'
 
-host = 'localhost'
-porta = 4001 
-socket = UDPSocket.new
-socket.bind('localhost', porta)
+SERVER_IP = '127.0.0.1'
+SERVER_PORT = 5000
 
-puts "Cliente UDP aguardando na porta #{porta}..."
+client = UDPSocket.new
+client.connect(SERVER_IP, SERVER_PORT)
+
+puts "Conectado ao servidor UDP (#{SERVER_IP}:#{SERVER_PORT})"
+puts "Digite suas mensagens. Pressione Ctrl+C para sair."
 
 Thread.new do
   loop do
-    mensagem, cliente = socket.recvfrom(1024)
-    puts "\nRecebido de #{cliente[3]}: #{mensagem}"
-    print "Cliente: "
+    begin
+      msg, _ = client.recvfrom(1024)
+      puts "\n#{msg.strip}"
+      print "> "
+    rescue
+      break
+    end
   end
 end
 
 loop do
-  print "Cliente: "
-  texto = gets.chomp
-  socket.send(texto, 0, host, 4000)
+  print "> "
+  message = gets
+  break if message.nil?
+
+  client.send(message.strip, 0)
 end

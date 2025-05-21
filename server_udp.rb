@@ -1,21 +1,26 @@
 require 'socket'
 
-porta = 4000
-socket = UDPSocket.new
-socket.bind('localhost', porta)
+PORT = 5000
+server = UDPSocket.new
+server.bind("0.0.0.0", PORT)
 
-puts "Servidor UDP aguardando na porta #{porta}..."
+clients = []
 
-Thread.new do
-  loop do
-    mensagem, cliente = socket.recvfrom(1024)
-    puts "\nRecebido de #{cliente[3]}: #{mensagem}"
-    print "Servidor: "
-  end
-end
+puts "Servidor UDP iniciado na porta #{PORT}..."
 
 loop do
-  print "Servidor: "
-  texto = gets.chomp
-  socket.send(texto, 0, 'localhost', 4001)
+  msg, addr = server.recvfrom(1024)
+  client_info = addr[3] + ":" + addr[1].to_s
+
+  unless clients.include?(addr)
+    clients << addr
+    puts "Novo cliente conectado: #{client_info}"
+  end
+
+  puts "Mensagem recebida de #{client_info}: #{msg.strip}"
+
+  clients.each do |client|
+    next if client == addr
+    server.send("#{client_info} diz: #{msg}", 0, client[3], client[1])
+  end
 end
